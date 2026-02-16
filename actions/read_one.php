@@ -1,33 +1,22 @@
 <?php
 header("Content-Type: application/json");
-include "../db.php";
-
-if (!isset($_GET['id'])) {
-    echo json_encode([ 
-        "success" => false,
-        "error" => "ID required"
-    ]);
-    exit;
+include "../database.php";
+$id = $_GET['id'] ?? null;
+if (!$id) {
+    echo json_encode(["success" => false, "error" => "Missing required ID"]);
+    exit();
 }
-
-$id = intval($_GET['id']);
-
-$sql = "SELECT * FROM  WHERE id = $id";
-$result = $conn->query($sql);
-
-if ($result && $result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-
-    echo json_encode([
-        "success" => true,
-        "data" => $row
+$stmt = $conn->prepare("SELECT * FROM students WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result->num_rows > 0) {
+    $data = $result->fetch_assoc();
+    echo json_encode(["success" => true, "data" => $data
     ]);
 } else {
-    echo json_encode([
-        "success" => false,
-        "error" => "not found"
+    echo json_encode(["success" => false, "error" => "Record not found"
     ]);
 }
-
 $conn->close();
 ?>

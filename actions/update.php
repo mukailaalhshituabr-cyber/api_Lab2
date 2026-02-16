@@ -1,31 +1,22 @@
 <?php
 header("Content-Type: application/json");
-include "../db.php";
-
-if (!isset($_POST['id']) || !isset($_POST['name']) || !isset($_POST['phone'])) {
-    echo json_encode([
-        "success" => false,
-        "error" => "Missing parameters"
-    ]);
-    exit;
+include "../database.php";
+$id = $_POST['id'] ?? null;
+$name = $_POST['name'] ?? null;
+$phone = $_POST['phone'] ?? null;
+$email = $_POST['email'] ?? null;
+if (!$id || !$name || !$phone || !$email) {
+    echo json_encode(["success" => false, "error" => "Missing required fields"]);
+    exit();
 }
-
-$id = intval($_POST['id']);
-$name = $conn->real_escape_string($_POST['name']);
-$phone = $conn->real_escape_string($_POST['phone']);
-
-$sql = "UPDATE student SET name='$name', phone='$phone' WHERE id=$id";
-
-if ($conn->query($sql) && $conn->affected_rows > 0) {
-    echo json_encode([
-        "success" => true
-    ]); 
+$stmt = $conn->prepare("UPDATE students SET name = ?, phone = ?, email = ? WHERE id = ?");
+$stmt->bind_param("sssi", $name, $phone, $email, $id);
+if ($stmt->execute()) {
+    echo json_encode(["success" => true, "data"=>["id" => $id, "name" => $name, "phone" => $phone, "email" => $email]
+    ]);
 } else {
-    echo json_encode([
-        "success" => false,
-        "error" => "Update failed or record not found"
+    echo json_encode(["success" => false, "error" => "Update record failed"
     ]);
 }
-
 $conn->close();
 ?>

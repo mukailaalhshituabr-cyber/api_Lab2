@@ -1,29 +1,19 @@
 <?php
 header("Content-Type: application/json");
-include "../db.php";
-
-if (!isset($_POST['id'])) { 
-    echo json_encode([
-        "success" => false,
-        "error" => "ID required"
-    ]);
-    exit;
+include "../database.php";
+$id = $_POST['id'] ?? null;
+if (!$id) {
+    echo json_encode(["success" => false, "error" => "Missing required ID"]);
+    exit();
 }
-
-$id = intval($_POST['id']);
-
-$sql = "DELETE FROM student WHERE id=$id";
-
-if ($conn->query($sql) && $conn->affected_rows > 0) {
-    echo json_encode([
-        "success" => true
+$stmt = $conn->prepare("DELETE FROM students WHERE id = ?");
+$stmt->bind_param("i", $id);
+if ($stmt->execute()) {
+    echo json_encode(["success" => true, "message" => "Record deleted successfully"
     ]);
 } else {
-    echo json_encode([
-        "success" => false,
-        "error" => "Delete failed or record not found"
+    echo json_encode(["success" => false, "error" => "Deleting record failed"
     ]);
 }
-
 $conn->close();
 ?>
